@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Deseos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pino: #0f3d2e;
+      --pino-oscuro: #0a2a20;
+      --verde: #1f6b4a;
+      --rojo: #b3202c;
+      --rojo-oscuro: #8a1621;
+      --dorado: #d4a64a;
+      --crema: #fbf6ec;
+      --tinta: #2b2320;
+      --tinta-suave: #6b5d55;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Nunito", system-ui, sans-serif;
+      color: var(--tinta);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(212,166,74,.12), transparent 40%),
+        radial-gradient(circle at 80% 90%, rgba(179,32,44,.15), transparent 45%),
+        var(--pino);
+      padding: 32px 16px 48px;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      color: var(--crema);
+      margin-bottom: 20px;
+    }
+    header h1 {
+      font-family: "Mountains of Christmas", cursive;
+      font-size: clamp(2.2rem, 6vw, 3.2rem);
+      margin: 0;
+      color: var(--dorado);
+      text-shadow: 0 2px 0 rgba(0,0,0,.25);
+    }
+    header p { margin: 4px 0 0; opacity: .8; }
+
+    /* ---------- Menú ---------- */
+    .menu {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      max-width: 760px;
+      margin: 0 auto 28px;
+      padding: 0;
+      list-style: none;
+    }
+    .menu button {
+      font: inherit;
+      font-weight: 600;
+      font-size: .95rem;
+      cursor: pointer;
+      border: 2px solid rgba(251,246,236,.35);
+      background: transparent;
+      color: var(--crema);
+      padding: 6px 16px;
+      border-radius: 999px;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .menu button:hover { border-color: var(--dorado); }
+    .menu button:focus-visible { outline: 3px solid var(--dorado); outline-offset: 2px; }
+    .menu button[aria-pressed="true"] {
+      background: var(--rojo);
+      border-color: var(--rojo);
+      color: #fff;
+    }
+
+    /* ---------- Tarjeta ---------- */
+    .escenario {
+      display: flex;
+      justify-content: center;
+    }
+    .marco {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+    }
+    .flecha {
+      position: absolute;
+      top: var(--centro-titulo, 70px);
+      transform: translateY(-50%);
+      z-index: 2;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid rgba(251,246,236,.35);
+      background: transparent;
+      color: var(--crema);
+      font-size: 1.4rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .flecha:hover { border-color: var(--dorado); color: var(--dorado); }
+    .flecha:focus-visible { outline: 3px solid var(--dorado); outline-offset: 2px; }
+    .anterior  { right: calc(100% + 24px); }
+    .siguiente { left:  calc(100% + 24px); }
+
+    /* En pantallas angostas las flechas quedan dentro de la franja roja */
+    @media (max-width: 680px) {
+      .anterior  { right: auto; left: 20px; }
+      .siguiente { left: auto; right: 20px; }
+      .flecha {
+        width: 38px;
+        height: 38px;
+        background: rgba(0,0,0,.15);
+        border-color: rgba(255,255,255,.5);
+        color: #fff;
+      }
+    }
+
+    .card {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+      background: var(--crema);
+      border-radius: 18px;
+      padding: 0 0 28px;
+      box-shadow: 0 20px 40px rgba(0,0,0,.35), 0 0 0 6px var(--rojo), 0 0 0 8px var(--dorado);
+      overflow: hidden;
+      animation: aparecer .35s ease-out;
+    }
+    /* borde cosido interior */
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border: 2px dashed rgba(212,166,74,.6);
+      border-radius: 12px;
+      pointer-events: none;
+    }
+
+    .nombre {
+      margin: 0 0 20px;
+      padding: 28px 24px 22px;
+      text-align: center;
+      font-family: "Mountains of Christmas", cursive;
+      font-size: clamp(2rem, 7vw, 2.6rem);
+      color: #fff;
+      background:
+        repeating-linear-gradient(135deg, transparent 0 14px, rgba(255,255,255,.06) 14px 28px),
+        linear-gradient(var(--rojo), var(--rojo-oscuro));
+      position: relative;
+    }
+    .nombre::before {
+      content: "✦";
+      display: block;
+      font-family: "Nunito", sans-serif;
+      font-size: 1rem;
+      color: var(--dorado);
+      margin-bottom: 2px;
+    }
+
+    .descripcion {
+      margin: 18px 28px 8px;
+      font-weight: 700;
+      font-size: .8rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .descripcion::after {
+      content: "";
+      flex: 1;
+      height: 2px;
+      background: currentColor;
+      opacity: .25;
+    }
+    .descripcion.si { color: var(--verde); }
+    .descripcion.no { color: var(--rojo); }
+
+    .lista {
+      margin: 0 28px;
+      padding: 0;
+      list-style: none;
+    }
+    .lista > li {
+      position: relative;
+      padding: 7px 0 7px 28px;
+      line-height: 1.45;
+      border-bottom: 1px solid rgba(43,35,32,.08);
+    }
+    .lista > li:last-child { border-bottom: 0; }
+    .lista > li::before {
+      position: absolute;
+      left: 0;
+      top: 7px;
+      width: 20px;
+      text-align: center;
+      font-weight: 700;
+    }
+    .lista.si > li::before { content: "❄"; color: var(--verde); }
+    .lista.no > li::before { content: "✕"; color: var(--rojo); }
+
+    .lista ul {
+      margin: 6px 0 0;
+      padding-left: 18px;
+      color: var(--tinta-suave);
+      font-size: .95em;
+    }
+    .lista ul li { padding: 2px 0; }
+
+    .lista a { color: var(--verde); font-weight: 600; word-break: break-all; }
+    .lista .vacio { color: var(--tinta-suave); font-style: italic; }
+    .lista .vacio::before { content: "–"; color: var(--tinta-suave); }
+
+    @keyframes aparecer {
+      from { opacity: 0; transform: translateY(10px) scale(.98); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ---------- Nieve ---------- */
+    .copo {
+      position: fixed;
+      top: -10px;
+      color: #fff;
+      opacity: .6;
+      pointer-events: none;
+      animation: caer linear infinite;
+      z-index: 0;
+    }
+    @keyframes caer {
+      to { transform: translateY(110vh) rotate(360deg); }
+    }
+    header, .menu, .escenario { position: relative; z-index: 1; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .copo { display: none; }
+      .card { animation: none; }
+    }
+
+    @media (max-width: 520px) {
+      .descripcion, .lista { margin-left: 20px; margin-right: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Lista de Deseos</h1>
+    <p>Elegí a quién le vas a regalar 🎁</p>
+  </header>
+
+  <nav aria-label="Personas">
+    <ul class="menu" id="menu"></ul>
+  </nav>
+
+  <main class="escenario">
+    <div class="marco" id="marco">
+    <button class="flecha anterior" id="anterior" aria-label="Anterior">‹</button>
+    <button class="flecha siguiente" id="siguiente" aria-label="Siguiente">›</button>
+
+    <div class="card" id="card">
+      <h2 class="nombre">{Nombre}</h2>
+      <p class="descripcion si">Lo que SÍ</p>
+      <ul class="lista si"></ul>
+      <p class="descripcion no">Lo que NO</p>
+      <ul class="lista no"></ul>
+    </div>
+    </div>
+  </main>
+
+  <script>
+    // Un item puede ser texto o { texto, sub: [...] } para sublistas.
+    const personas = [
+      {
+        nombre: "Elena",
+        si: [
+          "Maquillaje coreano",
+          "Wakuku!",
+          "Gradas de telita para perros",
+          "Un Switch 2 🤣🤣🫣"
+        ],
+        no: ["Ropa", "Cosas para la casa"]
+      },
+      {
+        nombre: "Leonardo",
+        si: [
+          "Peluches",
+          "Pijamas de manga larga",
+          {
+            texto: "Juegos Nintendo Switch / PlayStation 5 (pueden ser de segunda)",
+            sub: [
+              "Final Fantasy 7 Rebirth (PS5)",
+              "Super Mario Galaxy + Galaxy 2 (NS)",
+              "Sonic x Shadow Generations (NS/PS5)",
+              "Kirby & the Forgotten Land (NS)",
+              "Pokémon Mystery Dungeon Rescue Team DX (NS)",
+              "Pikmin 4 (NS)",
+              "Metaphor ReFantazio (PS5)",
+              "Atelier Yumia (NS/PS5)"
+            ]
+          }
+        ],
+        no: ["Ropa", "Utensilios de cocina ni platos", "Ropa de cama"]
+      },
+      {
+        nombre: "Fabi",
+        si: [
+          "Dados (no dados regulares, sino para DnD/TCG que no son solo d6), preferiblemente con algo de diseño tipo así https://acesse.one/j43gjeq o más simplecitos tipo así https://l1nk.dev/1fgc1uo — entre más variados mejor",
+          "Pijama (camisas de manga larga y pantalones largos)",
+          "En general cualquier cosa de Hololive (playmats, peluches, figuras, llaveros, cartas/sobres del TCG, etc.). Si quiere algo de alguna en específico, esta es la lista completa: https://hololive.hololivepro.com/en/talents/ — puede enfocarse en las de Myth, Promise, Advent y Justice, pero cualquiera sirve",
+          "Mouse para la compu (no de oficina)",
+          "Si no se decide: acepto donaciones de plata para el maletero Akurat de la moto (es más del doble del presupuesto, así que lo que pueda aportar sirve)"
+        ],
+        no: ["Ropa (incluye suéteres y zapatos)", "Audífonos", "Capa para lluvia"]
+      },
+      {
+        nombre: "Monica",
+        si: [
+          "Crema para contorno de ojos o serum facial de la marca Costa (piel mixta) o de alguna marca de skin care coreano",
+          "Bolso no muy grande, pero que sirva para jalar un pañal, toallitas y un abrigo de Liam",
+          "Botella insulada"
+        ],
+        no: ["Chocolates", "Jarras"]
+      },
+      {
+        nombre: "Jose",
+        si: [
+          "Deck box para 100 cartas: https://a.co/d/040H56cN",
+          "Card binder: https://a.co/d/063e3nnM",
+          "Body pillow, máx. 150 cm: https://a.co/d/0bbNDqm2",
+          "Camisas talla S — negro, blanco, azul o café oscuro, nada muy brillante (excepto blanco claro)",
+          "(Los links de Amazon son de referencia)"
+        ],
+        no: [
+          "Bolsos, de cualquier tipo — no necesito más, no quiero más; para variar siempre me dan uno, ya tengo muchos y no los uso",
+          "Nada de comer porfa"
+        ]
+      },
+      {
+        nombre: "Isaac",
+        si: [
+          {
+            texto: "Juegos (pueden ser de segunda)",
+            sub: ["Pokémon Diamante Reluciente", "Pokémon Perla Brillante"]
+          },
+          "Short talla 34 (negro, beige, verde oscuro)",
+          "Caja para herramientas grande",
+          "Esmeriladora pequeña",
+          "Taladro inalámbrico",
+          "Máquina de afeitar pequeña",
+          {
+            texto: "Perfume",
+            sub: ["Portfolio Perry Ellis azul", "Clinique Happy anaranjado", "Cualquiera Calvin Klein o Paco Rabanne"]
+          },
+          "Pantuflas o tipo Crocs talla 42/43",
+          "Adornos para la casa",
+          "Cuadros",
+          "Vino 🍷 casi que cualquier Malbec",
+          "Jack Daniel’s en cualquier sabor"
+        ],
+        no: [
+          "Camisas, camisetas o suéteres",
+          "Pantalones o jeans",
+          "Accesorios para moto/cuadra",
+          "Medias",
+          "Carbón",
+          "Comestibles",
+          "Vino blanco, champagne o espumante",
+          "Vino rosado"
+        ]
+      },
+      {
+        nombre: "Josué",
+        si: [
+          "El libro de Harry Potter y el prisionero de Azkaban",
+          "El libro de Los Gatos Guerreros: La Nueva Profecía – Medianoche",
+          "Zapatos talla 39",
+          "Un juego cualquiera de Switch",
+          "Dinero"
+        ],
+        no: ["Cristalitos"]
+      },
+      {
+        nombre: "Isa",
+        si: [
+          "Aeropress (es como un cosito pa hacer café)",
+          "Medias chistosas JAJA",
+          "Confites 😋",
+          "Botinesss (36-37)",
+          "Vinilo de Conan Gray, cualquieraaa (tengo el de Superache y Found Heaven)",
+          "Juegos de mesaaa",
+          "Unas cartas como de estaciones (tengo Autumn y Winter)",
+          "Cartas de Pokémon JAJAJAJAJA",
+          "Mangas o así"
+        ],
+        no: ["Ropa, depende del tipo de ropa 😭"]
+      },
+      {
+        nombre: "Efrain",
+        si: [
+          "Pijamas no calientes talla 12-18",
+          "Camisetas y shorts fresquitos 12-18",
+          "Zapatitos",
+          "Caja para juguetes",
+          "Casco",
+          "Shampoo y acondicionadores para rizos",
+          "Perfume no dulce",
+          "Libros de estimulación temprana",
+          "Juguetes de apilar o armar con piezas grandes"
+        ],
+        no: ["Peluches", "Mamelucos", "Suéter", "Ropa abrigada"]
+      },
+      {
+        nombre: "Yaritza",
+        si: [
+          "Matcha ceremonial (le gusta mucho el de sencha) por si se quieren botar",
+          "Turrones de macadamia, pistacho o almendra (maní no)",
+          "Los arándanos con chocolate de Pequeño Mundo",
+          "Bisutería con dijes pequeños",
+          "Productos de skin care",
+          "Productos para el cuidado del cabello",
+          "Cosas para matcha",
+          "Candelabros"
+        ],
+        no: ["Aretes — NO absoluto", "Perfumes", "Ya no más cosas de perro salchicha"]
+      },
+      {
+        nombre: "Liam",
+        si: [
+          "Ropa talla 24 meses o 2 años",
+          "Pijamas de pantalón largo y manga corta",
+          "Libros de cuentos o educativos (destete, dejar el pañal, manejo de emociones)",
+          "Juguetes que no sean fáciles de destruir, sin piezas pequeñas",
+          "Juego de bolos (o parecido)",
+          "Magnetiles",
+          "Cosas que lo cansen físicamente jajaja"
+        ],
+        no: [
+          "Zapatos",
+          "Ropa muy caliente",
+          "Suéters",
+          "Bicicleta (ya tiene)",
+          "Bolas suaves (las muerde)",
+          "Lápices de color, crayolas ni nada de pintar ni libros de pintar"
+        ]
+      },
+      {
+        nombre: "Laura Ulate",
+        si: [
+          "Blusas color celeste, verde claro, beige, crema o papaya. Talla S o M dependiendo de la hechura, que no queden apretadas",
+          "Tenis negras",
+          "Gel de baño de avena",
+          "Perfume Purple 360",
+          "Crema para piernas cansadas",
+          "Pretzels"
+        ],
+        no: ["Blusas negras, azules, rojas", "Mascotas", "Confites", "Botellas de vino", "Chocolates"]
+      },
+      {
+        nombre: "Eter",
+        si: [
+          "Opción #1: Honda Transalp",
+          "Opción #2: Dados de Dungeons and Dragons",
+          "Opción #3: Comida (ideas: pastelillo de lechón arreglado, papa nachos de donde Nana)"
+        ],
+        no: ["Ropa"]
+      }
+    ];
+
+    const card = document.getElementById("card");
+    const menu = document.getElementById("menu");
+    const elNombre = card.querySelector(".nombre");
+    const elSi = card.querySelector(".lista.si");
+    const elNo = card.querySelector(".lista.no");
+    let actual = 0;
+
+    function linkify(texto) {
+      const frag = document.createDocumentFragment();
+      texto.split(/(https?:\/\/[^\s),]+)/g).forEach((parte, i) => {
+        if (i % 2) {
+          const a = document.createElement("a");
+          a.href = parte;
+          a.target = "_blank";
+          a.rel = "noopener";
+          a.textContent = parte.replace(/^https?:\/\//, "");
+          frag.appendChild(a);
+        } else if (parte) {
+          frag.appendChild(document.createTextNode(parte));
+        }
+      });
+      return frag;
+    }
+
+    function llenarLista(ul, items) {
+      ul.replaceChildren();
+      if (!items.length) {
+        const li = document.createElement("li");
+        li.className = "vacio";
+        li.textContent = "Nada en particular";
+        ul.appendChild(li);
+        return;
+      }
+      items.forEach(item => {
+        const li = document.createElement("li");
+        const texto = typeof item === "string" ? item : item.texto;
+        li.appendChild(linkify(texto));
+        if (typeof item === "object" && Array.isArray(item.sub)) {
+          const sub = document.createElement("ul");
+          item.sub.forEach(s => {
+            const sli = document.createElement("li");
+            sli.appendChild(linkify(s));
+            sub.appendChild(sli);
+          });
+          li.appendChild(sub);
+        }
+        ul.appendChild(li);
+      });
+    }
+
+    // Centra las flechas verticalmente con la franja del título
+    const marco = document.getElementById("marco");
+    function alinearFlechas() {
+      marco.style.setProperty("--centro-titulo", elNombre.offsetHeight / 2 + "px");
+    }
+    window.addEventListener("resize", alinearFlechas);
+    if (document.fonts) document.fonts.ready.then(alinearFlechas);
+
+    function mostrar(i) {
+      actual = (i + personas.length) % personas.length;
+      const p = personas[actual];
+      elNombre.textContent = p.nombre;
+      llenarLista(elSi, p.si);
+      llenarLista(elNo, p.no);
+      alinearFlechas();
+
+      menu.querySelectorAll("button").forEach((b, j) =>
+        b.setAttribute("aria-pressed", j === actual ? "true" : "false"));
+
+      // reinicia la animación de entrada
+      card.style.animation = "none";
+      void card.offsetWidth;
+      card.style.animation = "";
+
+      history.replaceState(null, "", "#" + encodeURIComponent(p.nombre));
+    }
+
+    personas.forEach((p, i) => {
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = p.nombre;
+      b.addEventListener("click", () => mostrar(i));
+      li.appendChild(b);
+      menu.appendChild(li);
+    });
+
+    document.getElementById("anterior").addEventListener("click", () => mostrar(actual - 1));
+    document.getElementById("siguiente").addEventListener("click", () => mostrar(actual + 1));
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft") mostrar(actual - 1);
+      if (e.key === "ArrowRight") mostrar(actual + 1);
+    });
+
+    const desdeHash = personas.findIndex(p => "#" + encodeURIComponent(p.nombre) === location.hash);
+    mostrar(desdeHash >= 0 ? desdeHash : 0);
+
+    // Nieve suave de fondo
+    for (let i = 0; i < 24; i++) {
+      const c = document.createElement("span");
+      c.className = "copo";
+      c.textContent = "❄";
+      c.style.left = Math.random() * 100 + "vw";
+      c.style.fontSize = 8 + Math.random() * 12 + "px";
+      c.style.animationDuration = 8 + Math.random() * 10 + "s";
+      c.style.animationDelay = -Math.random() * 18 + "s";
+      document.body.appendChild(c);
+    }
+  </script>
+</body>
+</html>
